@@ -5,6 +5,7 @@ KERNEL_DIR="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 CLANG_DIR="${2:-${KERNEL_DIR}/clang}"
 DEVICE="${3:-caihong}"
 MSM_ARCH="${4:-pineapple}"
+CUSTOM_KERNEL_NAME="${CUSTOM_KERNEL_NAME:-}"
 
 export ARCH=arm64
 export LLVM=1
@@ -26,6 +27,20 @@ fi
 mkdir -p out
 KCONFIG_CONFIG="${KERNEL_DIR}/out/.config" \
     scripts/kconfig/merge_config.sh -m -r "${DEFCONFIGS[@]}"
+
+printf '\n' >> out/.config
+./scripts/config --file out/.config -e KSU -e KSU_SUSFS
+./scripts/config --file out/.config -e LTO_CLANG_THIN -d LTO_CLANG_FULL
+
+# Custom kernel name
+if [ -n "${CUSTOM_KERNEL_NAME}" ]; then
+    CLEAN_VERSION=$(echo "${CUSTOM_KERNEL_NAME}" | sed -E 's/^[0-9]+\.[0-9]+\.[0-9]+//')
+    [[ "${CLEAN_VERSION}" != -* ]] && CLEAN_VERSION="-${CLEAN_VERSION}"
+    echo "Setting custom kernel name: ${CLEAN_VERSION}"
+    sed -i "\$s|echo \"\$res\"|echo \"${CLEAN_VERSION}\"|" ./scripts/setlocalversion 2>/dev/null || true
+    ./scripts/config --file out/.config --set-str LOCALVERSION "${CLEAN_VERSION}"
+    ./scripts/config --file out/.config -d LOCALVERSION_AUTO
+fi
 
 make O=out olddefconfig
 

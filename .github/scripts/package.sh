@@ -4,6 +4,7 @@ set -euo pipefail
 KERNEL_DIR="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 DEVICE="${DEVICE:-caihong}"
 MSM_ARCH="${MSM_ARCH:-pineapple}"
+CUSTOM_KERNEL_NAME="${CUSTOM_KERNEL_NAME:-}"
 BOOT_IMG_URL="${BOOT_IMG_URL:-}"
 ANYKERNEL_REPO="${ANYKERNEL_REPO:-https://github.com/coolzyd9107/AnyKernel3.git}"
 ANYKERNEL_BRANCH="${ANYKERNEL_BRANCH:-master}"
@@ -41,9 +42,15 @@ rm -rf "${ANYKERNEL_DIR}/.git"
 
 cp "${IMAGE_PATH}" "${ANYKERNEL_DIR}/Image"
 
-sed -i "s/^kernel.string=.*/kernel.string=Stock Test Kernel for ${DEVICE} (${MSM_ARCH})/" "${ANYKERNEL_DIR}/anykernel.sh"
+KERNEL_TAG="BakaSU-SuSFS"
+if [ -n "${CUSTOM_KERNEL_NAME}" ]; then
+    CLEAN_NAME="${CUSTOM_KERNEL_NAME#-}"
+    KERNEL_TAG="${CLEAN_NAME}"
+fi
 
-ZIP_NAME="AnyKernel3-${DEVICE}-${MSM_ARCH}-stock.zip"
+sed -i "s/^kernel.string=.*/kernel.string=${KERNEL_TAG} Kernel for ${DEVICE} (${MSM_ARCH})/" "${ANYKERNEL_DIR}/anykernel.sh"
+
+ZIP_NAME="AnyKernel3-${DEVICE}-${MSM_ARCH}-${KERNEL_TAG}.zip"
 (
     cd "${ANYKERNEL_DIR}"
     zip -r9 "${DIST_DIR}/${ZIP_NAME}" ./* -x "README.MD" -x "LICENSE"
@@ -64,7 +71,7 @@ if [ -n "${BOOT_IMG_URL}" ]; then
         --boot "${DIST_DIR}/stock-boot.img" \
         --kernel "${IMAGE_PATH}" \
         --out "${DIST_DIR}" \
-        --out-name patched-boot.img
+        --out-name BakaSU-boot.img
     rm -f "${DIST_DIR}/stock-boot.img" "${DIST_DIR}/ksud"
-    echo "patched-boot.img created successfully."
+    echo "BakaSU-boot.img created successfully."
 fi
