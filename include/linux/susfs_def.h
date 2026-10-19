@@ -1,6 +1,8 @@
 #ifndef KSU_SUSFS_DEF_H
 #define KSU_SUSFS_DEF_H
 
+#define KSU_NO_PREINIT
+
 #include <linux/bits.h>
 #include <linux/string.h>
 
