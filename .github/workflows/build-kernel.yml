@@ -1,0 +1,67 @@
+name: Build Kernel (Test)
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: Device codename (caihong / waffle)
+        required: false
+        default: caihong
+      msm_arch:
+        description: MSM variant (pineapple)
+        required: false
+        default: pineapple
+      boot_img_url:
+        description: URL of stock boot.img to patch (optional)
+        required: false
+  push:
+    branches: ['lineage-24.0']
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout kernel
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison flex libssl-dev libelf-dev dwarves cpio python3 zip
+
+      - name: Download clang toolchain
+        run: |
+          mkdir -p clang
+          curl -L --fail \
+            "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main-kernel-build-2023/clang-r487747c.tar.gz" \
+            | tar -xz -C clang
+
+      - name: Build kernel
+        run: |
+          bash .github/scripts/build-kernel.sh \
+            "$PWD" \
+            "$PWD/clang" \
+            "${{ inputs.device || 'caihong' }}" \
+            "${{ inputs.msm_arch || 'pineapple' }}"
+
+      - name: Package artifacts
+        env:
+          BOOT_IMG_URL: ${{ inputs.boot_img_url }}
+          DEVICE: ${{ inputs.device || 'caihong' }}
+          MSM_ARCH: ${{ inputs.msm_arch || 'pineapple' }}
+        run: bash .github/scripts/package.sh "$PWD"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-${{ inputs.device || 'caihong' }}
+          if-no-files-found: ignore
+          compression-level: 0
+          path: |
+            dist/AnyKernel3-*.zip
+            dist/Image
+            dist/config
+            dist/patched-boot.img
