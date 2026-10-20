@@ -19,14 +19,6 @@
 #include <generated/gki_module_protected_exports.h>
 #include <generated/gki_module_unprotected.h>
 
-#define MAX_STRCMP_LEN (max(MAX_UNPROTECTED_NAME_LEN, MAX_PROTECTED_EXPORTS_NAME_LEN))
-
-/* bsearch() comparision callback */
-static int cmp_name(const void *sym, const void *protected_sym)
-{
-	return strncmp(sym, protected_sym, MAX_STRCMP_LEN);
-}
-
 /**
  * gki_is_module_protected_export - Is a symbol exported from a protected GKI module?
  *
