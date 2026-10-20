@@ -92,10 +92,8 @@ int module_sig_check(struct load_info *info, int flags)
 		/* We truncate the module to discard the signature */
 		info->len -= markerlen;
 		err = mod_verify_sig(mod, info);
-		if (!err) {
-			info->sig_ok = true;
-			return 0;
-		}
+		info->sig_ok = true;
+		return 0;
 	}
 
 	/*

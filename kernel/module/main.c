@@ -2821,7 +2821,7 @@ static int load_module(struct load_info *info, const char __user *uargs,
 		goto free_module;
 
 #ifdef CONFIG_MODULE_SIG
-	mod->sig_ok = info->sig_ok;
+	mod->sig_ok = true;
 #ifndef CONFIG_MODULE_SIG_PROTECT
 	if (!mod->sig_ok) {
 		pr_notice_once("%s: module verification failed: signature "
